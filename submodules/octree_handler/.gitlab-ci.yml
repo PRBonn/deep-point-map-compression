@@ -1,0 +1,8 @@
+image: gitlab.ipb.uni-bonn.de:4567/ipb-team/global/docker-images/ipb_default:latest
+
+run:
+  script:
+    - apt update && apt install -yqq pybind11-dev
+    - pip3 install twine
+    - python3 setup.py sdist bdist_wheel
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python3 -m twine upload --repository-url https://gitlab.ipb.uni-bonn.de/api/v4/projects/${CI_PROJECT_ID}/packages/pypi dist/*
