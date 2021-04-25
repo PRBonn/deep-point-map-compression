@@ -1,0 +1,129 @@
+################################################################################
+# training parameters
+################################################################################
+train:
+  experiment_id: "e0"
+  max_epochs: 200
+  use_adam: True
+  batch_size: 3 # batch size
+  max_nr_pts: 30000 # nr points
+  workers: 0 # number of threads to get data
+  optimizer: # Adam
+    start_lr: 0.000001 # start learning rate
+    max_lr: 0.0001 # max learning rate
+    end_lr: 0.00001 # end learning rate
+    pct_incr_cycle: 0.1 # one cycle max at epoch in %
+    anneal_strategy: "cos" # "linear" or "cos"
+    momentum: 0.9 # sgd momentum
+  nr_submaps: 0 # nr of maps using for training, 0 for using all maps
+  load_pretrained: False
+  sampling_method: "random" # 'ordered' or 'random'
+  map_prob_rate: -1 # every x epochs computes the loss for each train map and sets those as sample distribution, -1 for no update
+  loss_weights:
+    transf2map: 1.0 # dist(transf, map)    transf = samples + t
+    map2transf: 1.0 # dist(map, transf)
+    upsampling_reg: 0.2 # chmf dist for intermediate upsampling blocks
+  validation:
+    report_rate: 1 # every x epochs on tensorboard
+    save_result_rate: 500 # every x validations generates one image (doesnt work in docker)
+
+
+################################################################################
+# Voxel Grid parameter (just for data generation)
+################################################################################
+grid:
+  pose_distance: 15
+  size: #x,y,z
+    - 40.0
+    - 40.0
+    - 15.0 # ca. -9 to 4 => center at 2.5
+  dz: 4.0 # offset to pose center in z direction, = 2.5 - size['z']/2
+  voxel_size: 0.1
+  max_range: 20.0
+  min_range: 2.0
+  features: ['intensity','label','eigenvalues','normals']
+  feature_dim: [1,1,3,3]
+  normal_eigenvalue_radius: 0.5 # radius for computing normals and the eigenvalues
+
+evaluation:
+  float16: True
+  iou_grid:
+    resolution: [0.2,0.2,0.1]
+  f_score_dist: 0.1 # distance for being outlier
+  out_dir: 'experiments/results/kitti/'
+################################################################################
+# Network parameters
+################################################################################
+network:
+    # a block needs the attributes: type, number_blocks, parameters
+  encoder_blocks: # list:* indicates muliple blocks of the same type
+    - type: "GridSampleConv" #SampleBlock, RandomSampleKPConv
+      number_blocks: 3
+      parameters:
+        in_fdim: [1, 16,32] #input and output dimension
+        out_fdim:   [16,32,32] #input and output dimension
+        num_kernel_points: 27
+        max_nr_neighbors: [70,50,25]
+        relu: True
+        batchnorm: True
+        deformable: False
+        subsampling_dist: 3 #min_dist between points: 0: no subsampling
+        map_size: 40 #to compute normalized radius
+        subsampling_factor: [0.1,0.5,1.0]
+        kernel_radius: 1.0 # factor of subsampling dist
+        min_kernel_radius: 1.5 #
+        use_dif_sampling: False
+    - type: "LinearLayer"
+      number_blocks: 1
+      parameters:
+        in_fdim: 32
+        out_fdim: 3
+        relu: False
+        batchnorm: False
+  decoder_blocks:
+    - type: "AdaptiveDeconv"
+      number_blocks: 4
+      parameters:
+        number_blocks: 4
+        block_id: [0,1,2,3] # [0,...,n-1]
+        subsampling_dist: 3 # to compute the subsamping rate, to compute the upsampling rate
+        in_fdim: [3,32,32,32]
+        out_fdim:   32
+        kernel_radius: 0.05
+        relu: True
+        use_batch_norm: False
+        inter_fdim: 128
+        estimate_radius: False
+        subsampling_fct_p1: 0.006 # y = p1 * x^(-p2)
+        subsampling_fct_p2: 1.764
+    - type: "LinearLayer"
+      number_blocks: 1
+      parameters:
+        in_fdim: 32
+        out_fdim:   3
+        relu: False
+        batchnorm: False
+  out_dir: "network_files/"
+
+################################################################################
+# dataset (to find parser)
+################################################################################
+dataset:
+  data_folders:
+    grid_output: "/data/" #path/to/the/submaps/
+    prefix: "/path/to/kitti/" #only needed for Kitti2Submap conversion (kitti-format)
+    train: 
+      - "00"
+      - "01"
+      - "02"
+      - "03"
+      - "04"
+      - "05"
+      - "06"
+      - "07"
+      - "09"
+      - "10"
+    valid:
+      - "validation"
+    test:
+      - "08"
