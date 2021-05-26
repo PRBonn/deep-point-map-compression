@@ -293,8 +293,7 @@ class DepocoNetTrainer():
                 scale = input_dict['scale']
                 input_dict['features'] = input_dict['features'].to(self.device)
                 input_dict['points'] = input_dict['points'].to(self.device)
-                input_points = input_dict['points']
-
+                
                 ####### Cast to float16 if necessary #######
                 out_dict = self.encoder_model(input_dict.copy())
                 if self.config['evaluation']['float16']:
@@ -318,7 +317,6 @@ class DepocoNetTrainer():
                 gt_points = input_dict[reference_points].to(self.device)
 
                 # Scale to metric space
-                input_points *= scale
                 samples_transf *= scale
                 samples *= scale
                 translation *= scale
