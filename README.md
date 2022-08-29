@@ -10,7 +10,7 @@ Install nvida-docker and follow [these](https://stackoverflow.com/a/61737404)
 instructions
 
 ## Data
-You can download the dataset from [here](http://www.ipb.uni-bonn.de/html/projects/depoco/submaps.zip) and link the dataset to the docker container by configuring the Makefile
+You can download the dataset from [here](https://www.ipb.uni-bonn.de/html/projects/depoco/submaps.zip) and link the dataset to the docker container by configuring the Makefile
 
 ```sh
 DATASETS=<path-to-your-data>
