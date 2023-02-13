@@ -93,6 +93,9 @@ pyhon3 evaluate -cfg <path-to-your-config>
 
 This can **not** be done in the docker container and thus requires the installation on the local machine.
 
+## Acknowledgements
+
+Big thanks to [Ignacio Vizzo](https://github.com/nachovizzo) for supporting me with Docker!
 
 ## Citation
 
